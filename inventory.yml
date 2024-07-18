@@ -1,0 +1,21 @@
+[app]
+vm2 ansible_host=89.169.139.2
+vm3 ansible_host=89.169.138.139
+
+[database]
+vm1 ansible_host=89.169.137.143
+
+[web]
+vm1 ansible_host=89.169.137.143
+
+[app:vars]
+ansible_ssh_private_key_file=/home/usr-deploy/.ssh/id_rsa
+ansible_user=usr-deploy
+
+[database:vars]
+ansible_ssh_private_key_file=/home/usr-deploy/.ssh/id_rsa
+postgresql_version="12"
+postgresql_data_dir="/var/lib/postgresql/{{ postgresql_version }}/main"
+
+[web:vars]
+ansible_ssh_private_key_file=/home/usr-deploy/.ssh/id_rsa
