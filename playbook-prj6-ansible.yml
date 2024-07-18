@@ -1,0 +1,60 @@
+---
+- name: docker install
+  hosts: app
+  become: true
+  tasks:
+    - name: install docker on ubuntu
+      apt:
+       name: docker.io
+       state: present
+      when: ansible_facts['distribution'] == "Ubuntu"
+
+    - name: install docker on centos
+      yum:
+       name: docker
+       state: present
+      when: ansible_facts['distribution'] == "CentOS"
+
+
+- name: postgresql install
+  hosts: database
+  become: true
+  vars:
+          #postgresql_data_dir: "/var/lib/postgresql/12/main"
+    postgresql_bin_path: "/usr/lib/postgresql/12/bin"
+    ansible_ssh_pipelining: true
+
+  tasks:
+    - debug:
+       msg: "{{ postgresql_data_dir }}"
+    - name: Install packages
+      apt:
+       name:
+         - postgresql-{{ postgresql_version }}
+         - postgresql-contrib
+         - libpq-dev
+         - python3-psycopg2
+       state: present
+
+    - name: Check if PostgreSQL is initialized
+      stat:
+       path: "{{ postgresql_data_dir }}/pg_hba.conf"
+      register: postgres_data
+
+    - name: Empty data directory
+      file:
+       path: "{{ postgresql_data_dir }}"
+       state: absent
+      when: not postgres_data.stat.exists
+
+    - name: Initialize PostgreSQL
+      shell: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_data_dir }}"
+      become: true
+      become_user: postgres
+      when: not postgres_data.stat.exists
+	  
+    - name: Start and enable service
+      service:
+       name: postgresql
+       state: started
+       enabled: true
